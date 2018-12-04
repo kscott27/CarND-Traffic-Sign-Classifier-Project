@@ -7,6 +7,8 @@ from sklearn.utils import shuffle
 from tensorflow.contrib.layers import flatten
 import csv
 import cv2
+from resizeimage import resizeimage
+from PIL import Image
 
 ###### STEP 0: Load the Data ##############################################
 # Load pickled data
@@ -15,8 +17,8 @@ import pickle
 # TODO: Fill this in based on where you saved the training and testing data
 
 training_file = "../traffic-signs-data/train.p"
-validation_file = "../traffic-signs-data/valid.p"
-testing_file = "../traffic-signs-data/test.p"
+validation_file = "../traffic-signs-data/train.p"
+testing_file = "../traffic-signs-data/train.p"
 
 with open(training_file, mode='rb') as f:
     train = pickle.load(f)
@@ -27,8 +29,12 @@ with open(testing_file, mode='rb') as f:
     
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
-X_test, y_test = test['features'], test['labels']
 
+
+img = cv2.imread('../online-signs-data/sign1.jpg')
+image = cv2.resize(img, (32,32))
+image_shape = image.shape
+print(image_shape)
 
 ###### STEP 1: Dataset Summary & Exploration ##############################
 ### Replace each question mark with the appropriate value. 
@@ -41,16 +47,16 @@ n_train = len(X_train)
 n_validation = len(X_valid)
 
 # TODO: Number of testing examples.
-n_test = len(X_test)
+# n_test = len(X_test)
 
-for image in X_train:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+# for image in X_train:
+#   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-for image in X_valid:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+# for image in X_valid:
+#   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-for image in X_test:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+# for image in X_test:
+#   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 # TODO: What's the shape of an traffic sign image?
 image_shape = X_train[0].shape
@@ -72,7 +78,7 @@ for line in lines:
 n_classes = len(classes)
 
 print("Number of training examples =", n_train)
-print("Number of testing examples =", n_test)
+# print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
 
@@ -80,7 +86,7 @@ index = random.randint(0, n_train)
 image = X_train[index].squeeze()
 
 plt.figure(figsize=(1,1))
-plt.imshow(image, cmap="gray")
+plt.imshow(X_test, cmap="gray")
 plt.savefig('../visual.jpg')
 print(y_train[index])
 
@@ -95,7 +101,7 @@ def LeNet(x):
     mu = 0
     sigma = 0.1
     
-    # SOLUTION: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
+    # SOLUTION: Layer 1: Convolutional. Input = 32x32x3. Output = 28x28x6.
     conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 3, 6), mean = mu, stddev = sigma))
     conv1_b = tf.Variable(tf.zeros(6))
     conv1   = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
@@ -144,7 +150,7 @@ def LeNet(x):
     return logits
 
 
-x = tf.placeholder(tf.float32, (None, 32, 32, 3))
+x = tf.placeholder(tf.float32, (None, 734, 544, 3))
 y = tf.placeholder(tf.int32, (None))
 one_hot_y = tf.one_hot(y, n_classes)
 
@@ -172,36 +178,12 @@ def evaluate(X_data, y_data):
         accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
-###############################################################################################
-
-# Train the Model
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    num_examples = len(X_train)
-    
-    print("Training...")
-    print()
-    for i in range(EPOCHS):
-        X_train, y_train = shuffle(X_train, y_train)
-        for offset in range(0, num_examples, BATCH_SIZE):
-            end = offset + BATCH_SIZE
-            batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
-            
-        validation_accuracy = evaluate(X_valid, y_valid)
-        print("EPOCH {} ...".format(i+1))
-        print("Validation Accuracy = {:.3f}".format(validation_accuracy))
-        print()
-        
-    saver.save(sess, './lenet')
-    print("Model saved")
 
 
+# X_test = cv2.imread('../online-signs-data/sign1.jpg')
+# Y_test = np.array([29])
 with tf.Session() as sess:
     saver.restore(sess, tf.train.latest_checkpoint('.'))
 
     test_accuracy = evaluate(X_test, y_test)
     print("Test Accuracy = {:.3f}".format(test_accuracy))
-
-
-########## STEP 3 ##############################################################################

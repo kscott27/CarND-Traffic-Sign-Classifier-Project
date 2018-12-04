@@ -27,8 +27,12 @@ with open(testing_file, mode='rb') as f:
     
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
-X_test, y_test = test['features'], test['labels']
+# X_test, y_test = test['features'], test['labels']
 
+img = cv2.imread('../online-signs-data/sign1.jpg')
+X_test = cv2.resize(img, (32,32))
+X_test = np.asarray(X_test).reshape(2, 32, 32, 3)
+y_test = [29]
 
 ###### STEP 1: Dataset Summary & Exploration ##############################
 ### Replace each question mark with the appropriate value. 
@@ -42,15 +46,6 @@ n_validation = len(X_valid)
 
 # TODO: Number of testing examples.
 n_test = len(X_test)
-
-for image in X_train:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
-for image in X_valid:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
-for image in X_test:
-  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 # TODO: What's the shape of an traffic sign image?
 image_shape = X_train[0].shape
@@ -174,27 +169,27 @@ def evaluate(X_data, y_data):
     return total_accuracy / num_examples
 ###############################################################################################
 
-# Train the Model
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    num_examples = len(X_train)
+# # Train the Model
+# with tf.Session() as sess:
+#     sess.run(tf.global_variables_initializer())
+#     num_examples = len(X_train)
     
-    print("Training...")
-    print()
-    for i in range(EPOCHS):
-        X_train, y_train = shuffle(X_train, y_train)
-        for offset in range(0, num_examples, BATCH_SIZE):
-            end = offset + BATCH_SIZE
-            batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
+#     print("Training...")
+#     print()
+#     for i in range(EPOCHS):
+#         X_train, y_train = shuffle(X_train, y_train)
+#         for offset in range(0, num_examples, BATCH_SIZE):
+#             end = offset + BATCH_SIZE
+#             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
+#             sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
             
-        validation_accuracy = evaluate(X_valid, y_valid)
-        print("EPOCH {} ...".format(i+1))
-        print("Validation Accuracy = {:.3f}".format(validation_accuracy))
-        print()
+#         validation_accuracy = evaluate(X_valid, y_valid)
+#         print("EPOCH {} ...".format(i+1))
+#         print("Validation Accuracy = {:.3f}".format(validation_accuracy))
+#         print()
         
-    saver.save(sess, './lenet')
-    print("Model saved")
+#     saver.save(sess, './lenet')
+#     print("Model saved")
 
 
 with tf.Session() as sess:
