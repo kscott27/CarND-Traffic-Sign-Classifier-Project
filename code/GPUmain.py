@@ -7,8 +7,6 @@ from sklearn.utils import shuffle
 from tensorflow.contrib.layers import flatten
 import csv
 import cv2
-from resizeimage import resizeimage
-from PIL import Image
 
 ###### STEP 0: Load the Data ##############################################
 # Load pickled data
@@ -16,9 +14,9 @@ import pickle
 
 # TODO: Fill this in based on where you saved the training and testing data
 
-training_file = "../traffic-signs-data/train.p"
-validation_file = "../traffic-signs-data/train.p"
-testing_file = "../traffic-signs-data/train.p"
+training_file = "../data/train.p"
+validation_file = "../data/valid.p"
+testing_file = "../data/test.p"
 
 with open(training_file, mode='rb') as f:
     train = pickle.load(f)
@@ -29,16 +27,11 @@ with open(testing_file, mode='rb') as f:
     
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
+X_test, y_test = test['features'], test['labels']
 
-
-img = cv2.imread('../online-signs-data/sign1.jpg')
-image = cv2.resize(img, (32,32))
-image_shape = image.shape
-print(image_shape)
 
 ###### STEP 1: Dataset Summary & Exploration ##############################
-### Replace each question mark #   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-with the appropriate value. 
+### Replace each question mark with the appropriate value. 
 ### Use python, pandas or numpy methods rather than hard coding the results
 
 # TODO: Number of training examples
@@ -48,21 +41,22 @@ n_train = len(X_train)
 n_validation = len(X_valid)
 
 # TODO: Number of testing examples.
-# n_test = len(X_test)
+n_test = len(X_test)
 
-# for image in X_train:
+for image in X_train:
+  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-# for image in X_valid:
-#   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+for image in X_valid:
+  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-# for image in X_test:
-#   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+for image in X_test:
+  image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 # TODO: What's the shape of an traffic sign image?
 image_shape = X_train[0].shape
 
 # TODO: How many unique classes/labels there are in the dataset.
-f = open('../signnames.csv')
+f = open('signnames.csv')
 lines = f.readlines()
 
 classes = []
@@ -78,7 +72,7 @@ for line in lines:
 n_classes = len(classes)
 
 print("Number of training examples =", n_train)
-# print("Number of testing examples =", n_test)
+print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
 
@@ -86,22 +80,22 @@ index = random.randint(0, n_train)
 image = X_train[index].squeeze()
 
 plt.figure(figsize=(1,1))
-plt.imshow(X_test, cmap="gray")
+plt.imshow(image, cmap="gray")
 plt.savefig('../visual.jpg')
 print(y_train[index])
 
 ######## STEP 2: Design and Test a Model Architecture ####################
 X_train, y_train = shuffle(X_train, y_train)
 
-EPOCHS = 10
+EPOCHS = 25
 BATCH_SIZE = 128
 
 def LeNet(x):    
     # Arguments used for tf.truncated_normal, randomly defines variables for the weights and biases for each layer
     mu = 0
-    sigma = 0.1
+    sigma = 0.005
     
-    # SOLUTION: Layer 1: Convolutional. Input = 32x32x3. Output = 28x28x6.
+    # SOLUTION: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
     conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 3, 6), mean = mu, stddev = sigma))
     conv1_b = tf.Variable(tf.zeros(6))
     conv1   = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
@@ -127,25 +121,33 @@ def LeNet(x):
     fc0   = flatten(conv2)
     
     # SOLUTION: Layer 3: Fully Connected. Input = 400. Output = 120.
-    fc1_W = tf.Variable(tf.truncated_normal(shape=(400, 120), mean = mu, stddev = sigma))
-    fc1_b = tf.Variable(tf.zeros(120))
+    fc1_W = tf.Variable(tf.truncated_normal(shape=(400, 220), mean = mu, stddev = sigma))
+    fc1_b = tf.Variable(tf.zeros(220))
     fc1   = tf.matmul(fc0, fc1_W) + fc1_b
     
     # SOLUTION: Activation.
     fc1    = tf.nn.relu(fc1)
 
     # SOLUTION: Layer 4: Fully Connected. Input = 120. Output = 84.
-    fc2_W  = tf.Variable(tf.truncated_normal(shape=(120, 84), mean = mu, stddev = sigma))
-    fc2_b  = tf.Variable(tf.zeros(84))
+    fc2_W  = tf.Variable(tf.truncated_normal(shape=(220, 120), mean = mu, stddev = sigma))
+    fc2_b  = tf.Variable(tf.zeros(120))
     fc2    = tf.matmul(fc1, fc2_W) + fc2_b
     
     # SOLUTION: Activation.
     fc2    = tf.nn.relu(fc2)
 
+    # SOLUTION: Layer 4: Fully Connected. Input = 120. Output = 84.
+    fc3_W  = tf.Variable(tf.truncated_normal(shape=(120, 84), mean = mu, stddev = sigma))
+    fc3_b  = tf.Variable(tf.zeros(84))
+    fc3    = tf.matmul(fc2, fc3_W) + fc3_b
+    
+    # SOLUTION: Activation.
+    fc2    = tf.nn.relu(fc2)
+
     # SOLUTION: Layer 5: Fully Connected. Input = 84. Output = 43.
-    fc3_W  = tf.Variable(tf.truncated_normal(shape=(84, n_classes), mean = mu, stddev = sigma))
-    fc3_b  = tf.Variable(tf.zeros(n_classes))
-    logits = tf.matmul(fc2, fc3_W) + fc3_b
+    fc4_W  = tf.Variable(tf.truncated_normal(shape=(84, n_classes), mean = mu, stddev = sigma))
+    fc4_b  = tf.Variable(tf.zeros(n_classes))
+    logits = tf.matmul(fc3, fc4_W) + fc4_b
     
     return logits
 
@@ -178,12 +180,24 @@ def evaluate(X_data, y_data):
         accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
+###############################################################################################
 
-
-# X_test = cv2.imread('../online-signs-data/sign1.jpg')
-# Y_test = np.array([29])
+# Train the Model
 with tf.Session() as sess:
-    saver.restore(sess, tf.train.latest_checkpoint('.'))
-
-    test_accuracy = evaluate(X_test, y_test)
-    print("Test Accuracy = {:.3f}".format(test_accuracy))
+    sess.run(tf.global_variables_initializer())
+    num_examples = len(X_train)
+    
+    print("Training...")
+    print()
+    for i in range(EPOCHS):
+        X_train, y_train = shuffle(X_train, y_train)
+        for offset in range(0, num_examples, BATCH_SIZE):
+            end = offset + BATCH_SIZE
+            batch_x, batch_y = X_train[offset:end], y_train[offset:end]
+            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
+            
+        validation_accuracy = evaluate(X_valid, y_valid)
+        print("EPOCH {} ...".format(i+1))
+        print("Validation Accuracy = {:.3f}".format(validation_accuracy))
+        print()
+        

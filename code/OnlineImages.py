@@ -7,6 +7,7 @@ from sklearn.utils import shuffle
 from tensorflow.contrib.layers import flatten
 import csv
 import cv2
+import glob
 
 ###### STEP 0: Load the Data ##############################################
 # Load pickled data
@@ -27,12 +28,16 @@ with open(testing_file, mode='rb') as f:
     
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
-# X_test, y_test = test['features'], test['labels']
 
-img = cv2.imread('../online-signs-data/sign1.jpg')
-X_test = cv2.resize(img, (32,32))
-X_test = np.asarray(X_test).reshape(2, 32, 32, 3)
-y_test = [29]
+images = glob.glob('../online-signs-data/sign*.jpg')
+# Step through the list and search for chessboard corners
+X_test = []
+for idx, fname in enumerate(images):
+    image = cv2.imread(fname)
+    img = cv2.resize(image, (32,32))
+    X_test.append(img)
+
+y_test = [12,33,5,40,24]
 
 ###### STEP 1: Dataset Summary & Exploration ##############################
 ### Replace each question mark with the appropriate value. 
