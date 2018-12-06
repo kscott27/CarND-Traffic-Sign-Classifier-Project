@@ -87,13 +87,13 @@ print(y_train[index])
 ######## STEP 2: Design and Test a Model Architecture ####################
 X_train, y_train = shuffle(X_train, y_train)
 
-EPOCHS = 25
+EPOCHS = 20
 BATCH_SIZE = 128
 
 def LeNet(x):    
     # Arguments used for tf.truncated_normal, randomly defines variables for the weights and biases for each layer
     mu = 0
-    sigma = 0.005
+    sigma = 0.05
     
     # SOLUTION: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
     conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 3, 10), mean = mu, stddev = sigma))
@@ -208,4 +208,14 @@ with tf.Session() as sess:
         print("EPOCH {} ...".format(i+1))
         print("Validation Accuracy = {:.3f}".format(validation_accuracy))
         print()
+        
+    saver.save(sess, './lenet')
+    print("Model saved")
+
+
+with tf.Session() as sess:
+    saver.restore(sess, tf.train.latest_checkpoint('.'))
+
+    test_accuracy = evaluate(X_test, y_test)
+    print("Test Accuracy = {:.3f}".format(test_accuracy))
         
