@@ -7,6 +7,7 @@ from sklearn.utils import shuffle
 from tensorflow.contrib.layers import flatten
 import csv
 import cv2
+import glob
 
 ###### STEP 0: Load the Data ##############################################
 # Load pickled data
@@ -28,6 +29,30 @@ with open(testing_file, mode='rb') as f:
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
 X_test, y_test = test['features'], test['labels']
+
+# online_images = glob.glob('sign*.jpg')
+X_test2 = []
+# for idx, fname in enumerate(online_images):
+#     image = cv2.imread(fname)
+#     img = cv2.resize(image, (32,32))
+#     X_test2.append(img)
+
+image = cv2.imread('sign6.JPG')
+img = cv2.resize(image, (32,32))
+X_test2.append(img)
+image = cv2.imread('sign7.JPG')
+img = cv2.resize(image, (32,32))
+X_test2.append(img)
+image = cv2.imread('sign8.JPG')
+img = cv2.resize(image, (32,32))
+X_test2.append(img)
+image = cv2.imread('sign9.JPG')
+img = cv2.resize(image, (32,32))
+X_test2.append(img)
+image = cv2.imread('sign10.JPG')
+img = cv2.resize(image, (32,32))
+X_test2.append(img)
+y_test2 = [12,33,5,40,24]
 
 
 ###### STEP 1: Dataset Summary & Exploration ##############################
@@ -177,6 +202,7 @@ training_operation = optimizer.minimize(loss_operation)
 # Model Evaluation
 correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(one_hot_y, 1))
 accuracy_operation = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+softmax_operation = tf.nn.softmax(logits)
 saver = tf.train.Saver()
 
 def evaluate(X_data, y_data):
@@ -186,6 +212,21 @@ def evaluate(X_data, y_data):
     for offset in range(0, num_examples, BATCH_SIZE):
         batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
         accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
+        softmax = sess.run(softmax_operation, feed_dict={x: batch_x, y: batch_y})
+        # result = sess.run(tf.nn.top_k(tf.constant(cross_entropy), k=5))
+        total_accuracy += (accuracy * len(batch_x))
+    return total_accuracy / num_examples
+
+def evaluate_test(X_data, y_data):
+    num_examples = len(X_data)
+    total_accuracy = 0
+    sess = tf.get_default_session()
+    for offset in range(0, num_examples, BATCH_SIZE):
+        batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
+        accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
+        softmax = sess.run(softmax_operation, feed_dict={x: batch_x, y: batch_y})
+        print(softmax)
+        # top_k = sess.run(tf.nn.top_k(tf.constant(cross_entropy), k=5))
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 ###############################################################################################
@@ -218,4 +259,19 @@ with tf.Session() as sess:
 
     test_accuracy = evaluate(X_test, y_test)
     print("Test Accuracy = {:.3f}".format(test_accuracy))
+    
+with tf.Session() as sess:
+    saver.restore(sess, tf.train.latest_checkpoint('.'))
+
+    test_accuracy = evaluate_test(X_test2, y_test2)
+    print("Test Accuracy = {:.3f}".format(test_accuracy))
+
+# with tf.Session() as sess:
+#     saver.restore(sess, tf.train.latest_checkpoint('.'))
+
+#     softmax = sess.run(tf.nn.softmax(lgits))
+#     # softmax = sess.run(tf.nn.top_k(tf.constant(X_test2), k=5))
+#     print(softmax)
+
+
         
