@@ -67,6 +67,7 @@ n_validation = len(X_valid)
 
 # TODO: Number of testing examples.
 n_test = len(X_test)
+n_test2 = len(X_test2)
 
 for image in X_train:
   image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -101,13 +102,13 @@ print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
 
-index = random.randint(0, n_train)
-image = X_train[index].squeeze()
+index = random.randint(0, n_test2)
+image = X_test2[index].squeeze()
 
 plt.figure(figsize=(1,1))
 plt.imshow(image, cmap="gray")
-plt.savefig('../visual.jpg')
-print(y_train[index])
+# plt.savefig('../visual.jpg')
+print(y_test2[index])
 
 ######## STEP 2: Design and Test a Model Architecture ####################
 X_train, y_train = shuffle(X_train, y_train)
@@ -217,7 +218,7 @@ def evaluate(X_data, y_data):
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 
-def evaluate_test(X_data, y_data):
+def evaluate_online_images(X_data, y_data):
     num_examples = len(X_data)
     total_accuracy = 0
     sess = tf.get_default_session()
@@ -225,8 +226,8 @@ def evaluate_test(X_data, y_data):
         batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
         accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
         softmax = sess.run(softmax_operation, feed_dict={x: batch_x, y: batch_y})
-        print(softmax)
-        # top_k = sess.run(tf.nn.top_k(tf.constant(cross_entropy), k=5))
+        top_k = sess.run(tf.nn.top_k(tf.constant(softmax), k=5))
+        print(top_k)
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 ###############################################################################################
@@ -263,15 +264,9 @@ with tf.Session() as sess:
 with tf.Session() as sess:
     saver.restore(sess, tf.train.latest_checkpoint('.'))
 
-    test_accuracy = evaluate_test(X_test2, y_test2)
+    test_accuracy = evaluate_online_images(X_test2, y_test2)
     print("Test Accuracy = {:.3f}".format(test_accuracy))
 
-# with tf.Session() as sess:
-#     saver.restore(sess, tf.train.latest_checkpoint('.'))
-
-#     softmax = sess.run(tf.nn.softmax(lgits))
-#     # softmax = sess.run(tf.nn.top_k(tf.constant(X_test2), k=5))
-#     print(softmax)
 
 
         
